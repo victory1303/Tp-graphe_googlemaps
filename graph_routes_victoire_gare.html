@@ -3,7 +3,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Graphes: Victoire -> Gare Centrale (bleu + jaune)</title>
+  <title>Graphes: Victoire -> Gare Centrale (multiples)</title>
   <style>
     html, body, #map { height: 100%; margin: 0; padding: 0; }
     #map { height: 100vh; width: 100%; }
@@ -21,7 +21,7 @@
   <div id="legend" class="legend"></div>
 
   <script>
-    const ROUTES = [{"poly": "nfqYwet|Ac@v@iArAq@b@yAx@qBrAORQZSr@Ch@Jz@J^]SwA|@mCzAa@^uAb@sCz@eCr@Tp@cA^eB\\eAPWFQc@Q]CCk@HkEdACC}@TyUpGcAXIc@Mc@UmAAQWF_@BSDiA^[RmBd@u@PaAZ}Bp@e@@k@JeAVa@?w@Vc@h@e@RwBf@kATyAEsAEQAAGBYAYm@NCH?p@@p@Kb@KX[EkAE{BBmAHk@Bg@AASQeAqAVoBZ{C`@{EQU?mAH_BZQ@[@QDaAVmCt@SPs@hAo@nAe@pAMd@UdAKa@M_@OUUYWQs@Ss@Ay@Lc@JcFzAa@aB}@T_EfAaHlB{EnAuEfAcF|AuE|AyIjCyErAuA\\oD|@gEhAoLhDuBr@cAp@m@l@_ApAwDlFgCdDmDfFoAjBg@xA{@tCaBfFe@zAK`@MRSVSPeAl@{BvAmIbF_An@ORUf@M`A`@z@h@|@zAbCDRTrAHXNVpApBn@vB^f@BFd@OG_ACe@Iq@?y@JaCSSWIm@L", "stops_count": 0, "distance_m": 8254, "duration_s": 1547, "waypoints": [], "color": "blue"}, {"poly": "nfqYwet|ABGNJVRNTADIP?FH\\Pb@LL`@iBP{@PD|@Z`@Pm@hACL@Rz@lAt@xBz@zC|AhFjAdEbCrI~AbGh@`BeCfAwEnBkNzFyN~FcEjB}F~BwXfL_EbBmDzAkFtBkLxEgLtEO\\_@|AyBvHgEnN_CrHk@OyDqAyAa@c@?sANgAf@qCxAVh@Rt@Nh@LrA?b@C`@UfAoAfEo@zBmCdJ{A~E[bAOByBd@qEx@uHxAeE~@gEz@{KvBwE~@sEx@yDx@mEv@aHrAmAeGgAoF}AXoE~@_Ev@sJjBa@wBo@KsAq@Xq@OINHYp@o@tA}AfD@P{Dp@_Ex@kAgGoBmKu@wD{@cEq@cEsA{Ge@cC_Et@iB\\{C^_G|@kB\\m@L", "stops_count": 1, "distance_m": 10090, "duration_s": 2087, "waypoints": ["March\u00e9 Central, Kinshasa, DRC"], "color": "yellow"}, {"poly": "nfqYwet|ABGNJVRNTADIP?FH\\Pb@LL`@iBP{@PD|@Z`@Pm@hACL@Rz@lAt@xBz@zC|AhFjAdEbCrI~AbGh@`BeCfAwEnBkNzFyN~FcEjB}F~BwXfL_EbBmDzAkFtBkLxEgLtE}FvAmSfEcLzBQBCyAE{AI_HEwCEy@SkA[sAUy@Yk@k@k@_Bo@y@YSK[WcBkBwBeC[e@[eAeA}DiBmHu@iCOUUYWQUK]G[AW?y@LcD~@cBf@a@aB}@T_EfAeD~@mEjA_E`A_Dv@mBj@gFdBqCz@wEvAiD~@eD`AcFnAmThG_A\\UJm@d@m@l@{CdEiDvEsGfJq@lA{@rCaDdKK`@MRSVi@^o@^{BvAmIbF_An@Y`@Qn@Gj@`@z@h@|@zAbCP~@R`Av@lAh@z@Pl@\\hA^f@pA`GlB|J~@`FpAhHnB`K|CrPbBxIRhAVGrJiBlP_DhCg@o@wCa@gBWw@Vv@`@fBn@vCiCf@cGfAiHvAsJhB{@uEqDqR{BoLYyAWmBw@aE{AsHg@_C[gBk@mDk@{DCs@Gm@Ec@H{BBo@KMQKMCm@L", "stops_count": 2, "distance_m": 14805, "duration_s": 2288, "waypoints": ["Avenue du 30 Juin & Boulevard du 30 Juin, Kinshasa", "H\u00f4pital G\u00e9n\u00e9ral, Kinshasa, DRC"], "color": null}];
+    const ROUTES = [{"poly": "nfqYwet|Ac@v@iArAq@b@yAx@qBrAORQZSr@Ch@Jz@J^]SwA|@mCzAa@^uAb@sCz@eCr@Tp@cA^eB\\eAPWFQc@Q]CCk@HkEdACC}@TyUpGcAXIc@Mc@UmAAQWF_@BSDiA^[RmBd@u@PaAZ}Bp@e@@k@JeAVa@?w@Vc@h@e@RwBf@kATyAEsAEQAAGBYAYm@NCH?p@@p@Kb@KX[EkAE{BBmAHk@Bg@AASQeAqAVoBZ{C`@{EQU?mAH_BZQ@[@QDaAVmCt@SPs@hAo@nAe@pAMd@UdAKa@M_@OUUYWQs@Ss@Ay@Lc@JcFzAa@aB}@T_EfAaHlB{EnAuEfAcF|AuE|AyIjCyErAuA\\oD|@gEhAoLhDuBr@cAp@m@l@_ApAwDlFgCdDmDfFoAjBg@xA{@tCaBfFe@zAK`@MRSVSPeAl@{BvAmIbF_An@ORUf@M`A`@z@h@|@zAbCDRTrAHXNVpApBn@vB^f@BFd@OG_ACe@Iq@?y@JaCSSWIm@L", "stops_count": 0, "distance_m": 8254, "duration_s": 1552, "waypoints": [], "color": "blue"}, {"poly": "nfqYwet|ABGNJVRNTADIP?FH\\Pb@LL`@iBP{@PD|@Z`@Pm@hACL@Rz@lAt@xBz@zC|AhFjAdEbCrI~AbGh@`BeCfAwEnBkNzFyN~FcEjB}F~BwXfL_EbBmDzAkFtBkLxEgLtEO\\_@|AyBvHgEnN_CrHk@OyDqAyAa@c@?sANgAf@qCxAVh@Rt@Nh@LrA?b@C`@UfAoAfEo@zBmCdJ{A~E[bAOByBd@qEx@uHxAeE~@gEz@{KvBwE~@sEx@yDx@mEv@aHrAmAeGgAoF}AXoE~@_Ev@sJjBa@wBo@KsAq@Xq@OINHYp@o@tA}AfD@P{Dp@_Ex@kAgGoBmKu@wD{@cEq@cEsA{Ge@cC_Et@iB\\{C^_G|@kB\\m@L", "stops_count": 1, "distance_m": 10090, "duration_s": 2081, "waypoints": ["March\u00e9 Central, Kinshasa, DRC"], "color": "yellow"}, {"poly": "nfqYwet|ABGNJVRNTADIP?FH\\Pb@LL`@iBP{@PD|@Z`@Pm@hACL@Rz@lAt@xBz@zC|AhFjAdEbCrI~AbGh@`BeCfAwEnBkNzFyN~FcEjB}F~BwXfL_EbBmDzAkFtBkLxEgLtE}FvAmSfEcLzBQBCyAE{AI_HEwCEy@SkA[sAUy@Yk@k@k@_Bo@y@YSK[WcBkBwBeC[e@[eAeA}DiBmHu@iCOUUYWQUK]G[AW?y@LcD~@cBf@a@aB}@T_EfAeD~@mEjA_E`A_Dv@mBj@gFdBqCz@wEvAiD~@eD`AcFnAmThG_A\\UJm@d@m@l@{CdEiDvEsGfJq@lA{@rCaDdKK`@MRSVi@^o@^{BvAmIbF_An@Y`@Qn@Gj@`@z@h@|@zAbCP~@R`Av@lAh@z@Pl@\\hA^f@pA`GlB|J~@`FpAhHnB`K|CrPbBxIRhAVGrJiBlP_DhCg@o@wCa@gBWw@Vv@`@fBn@vCiCf@cGfAiHvAsJhB{@uEqDqR{BoLYyAWmBw@aE{AsHg@_C[gBk@mDk@{DCs@Gm@Ec@H{BBo@KMQKMCm@L", "stops_count": 2, "distance_m": 14805, "duration_s": 2305, "waypoints": ["Avenue du 30 Juin & Boulevard du 30 Juin, Kinshasa", "H\u00f4pital G\u00e9n\u00e9ral, Kinshasa, DRC"], "color": "orange"}, {"poly": "nfqYwet|ABGNJVRNTADIP?FH\\Pb@LL`@iBP{@PD|@Z`@Pm@hACL@Rz@lAt@xBz@zC|AhFjAdEbCrI~AbGh@`BeCfAwEnBkNzFyN~FcEjB}F~BwXfL_EbBmDzAkFtBkLxEgLtE}FvAmSfEcLzBQBCyAE{AI_HEwCEy@SkA[sAUy@Yk@k@k@_Bo@y@YSK[WcBkBwBeC[e@[eAeA}DiBmHu@iCOUUYWQUK]G[AW?y@LcD~@cBf@a@aB}@T_EfAeD~@mEjA_E`A_Dv@mBj@gFdBqCz@wEvAiD~@eD`AcFnAmThG_A\\UJm@d@m@l@{CdEiDvEsGfJq@lA{@rCaDdKK`@MRSVi@^o@^{BvAmIbF_An@Y`@Qn@Gj@`@z@h@|@zAbCP~@R`Av@lAh@z@Pl@\\hA^f@pA`Gn@lDTG[gBk@mDk@{DCs@Gm@Ec@H{BBo@KMQKMCm@L", "stops_count": 1, "distance_m": 10779, "duration_s": 1607, "waypoints": ["Avenue du 30 Juin & Boulevard du 30 Juin, Kinshasa"], "color": "purple"}, {"poly": "nfqYwet|ABGNJVRNTADIP?FH\\Pb@LL`@iBP{@PD|@Z`@Pm@hACL@Rz@lAt@xBz@zC|AhFjAdEbCrI~AbGh@`BeCfAwEnBkNzFyN~FcEjB}F~BwXfL_EbBmDzAkFtBkLxEgLtEO\\_@|AyBvHgEnN_CrHoBzFwHzVq@vBcApCGl@Fn@pDdRlBxJbCtL^jBg@@y@Bc@By@Dw@IgA_@{LyFu@[[G{@Ee@@cAPwE|@}E~@aBb@uATaAHm@HyDt@kDj@qCj@kE`AcLzBs@VaAt@kA|@k@RgDj@qGpA_Ep@{AZiDr@{Dn@cCf@aANsBHmAgGmBiJa@gBWw@Vv@`@fBn@vCiCf@cGfAiHvAyA}HgB_KuAsGaAgF`Ew@pEy@`HuAzDq@AQ|AgDXo@n@wAOINHYp@o@tA}AfD@P{Dp@_Ex@kAgGoBmKu@wD{@cEq@cEsA{Ge@cC_Et@iB\\{C^_G|@kB\\m@L", "stops_count": 2, "distance_m": 13245, "duration_s": 2368, "waypoints": ["H\u00f4pital G\u00e9n\u00e9ral, Kinshasa, DRC", "March\u00e9 Central, Kinshasa, DRC"], "color": "blue"}];
     const MARKERS = [{"title": "Rond-point Victoire, Kinshasa, DRC", "coord": {"lat": -4.3531316, "lng": 15.3457561}, "is_major": false, "is_end": false, "is_start": true}, {"title": "March\u00e9 Central, Kinshasa, DRC", "coord": {"lat": -4.3106748, "lng": 15.3127526}, "is_major": true, "is_end": false, "is_start": false}, {"title": "Avenue du 30 Juin & Boulevard du 30 Juin, Kinshasa", "coord": {"lat": -4.3022898, "lng": 15.3137566}, "is_major": true, "is_end": false, "is_start": false}, {"title": "H\u00f4pital G\u00e9n\u00e9ral, Kinshasa, DRC", "coord": {"lat": -4.3089828, "lng": 15.3061773}, "is_major": true, "is_end": false, "is_start": false}, {"title": "Gare Centrale, Kinshasa, DRC", "coord": {"lat": -4.301292699999999, "lng": 15.3179207}, "is_major": false, "is_end": true, "is_start": false}];
     const API_KEY = "AIzaSyAwd1S8sAWIMsxdSvHrkk55v62gf6MlDH8";
 
@@ -38,23 +38,19 @@
       const destLatLng = destMarker ? new google.maps.LatLng(destMarker.coord.lat, destMarker.coord.lng) : null;
 
       ROUTES.forEach((r, idx) => {
-        // skip routes without color (we removed red)
-        if (!r.color) return;
+        if (!r.color || !r.poly) return;
 
         const path = google.maps.geometry.encoding.decodePath(r.poly || "");
         const latLngs = path.map(p => new google.maps.LatLng(p.lat(), p.lng()));
 
-        // TRIM near destination to avoid tiny overshoot
+        // TRIM near destination
         let usedLatLngs = latLngs;
         if (destLatLng && latLngs.length > 0) {
           let minIdx = latLngs.length - 1;
           let minDist = Infinity;
           for (let i = 0; i < latLngs.length; i++) {
             const d = google.maps.geometry.spherical.computeDistanceBetween(latLngs[i], destLatLng);
-            if (d < minDist) {
-              minDist = d;
-              minIdx = i;
-            }
+            if (d < minDist) { minDist = d; minIdx = i; }
           }
           usedLatLngs = latLngs.slice(0, Math.min(minIdx + 1, latLngs.length));
           const last = usedLatLngs[usedLatLngs.length - 1];
@@ -73,7 +69,7 @@
 
         const info = new google.maps.InfoWindow();
         line.addListener('click', (ev) => {
-          const content = `<div><b>${idx+1}</b><br/>Arrêts: ${r.stops_count}<br/>Distance: ${Math.round(r.distance_m)} m<br/>Durée: ${Math.round(r.duration_s)} s</div>`;
+          const content = `<div><b>Trajet ${idx+1}</b><br/>Arrêts: ${r.stops_count}<br/>Distance: ${Math.round(r.distance_m)} m<br/>Durée: ${Math.round(r.duration_s)} s</div>`;
           info.setContent(content);
           info.setPosition(ev.latLng);
           info.open(map);
@@ -109,14 +105,15 @@
       map.fitBounds(bounds);
 
       const legend = document.getElementById('legend');
-      // Updated legend: only blue and yellow routes
       legend.innerHTML = `
         <div><b>Légende</b></div>
         <div><img src="http://maps.google.com/mapfiles/ms/icons/blue-dot.png"> Départ (Victoire)</div>
         <div><img src="http://maps.google.com/mapfiles/ms/icons/green-dot.png"> Arrivée (Gare Centrale)</div>
         <div><img src="http://maps.google.com/mapfiles/ms/icons/black-dot.png"> Grand arrêt</div>
-        <div style="margin-top:6px"><span style="display:inline-block;width:16px;height:6px;background:blue;margin-right:6px"></span> Trajet — maximum (bleu)</div>
-        <div><span style="display:inline-block;width:16px;height:6px;background:yellow;margin-right:6px"></span> Trajet — minimum (jaune)</div>
+        <div style="margin-top:6px"><span style="display:inline-block;width:16px;height:6px;background:blue;margin-right:6px"></span> Trajet  — prioritaire (bleu)</div>
+        <div><span style="display:inline-block;width:16px;height:6px;background:yellow;margin-right:6px"></span> Trajet 2 (jaune)</div>
+        <div><span style="display:inline-block;width:16px;height:6px;background:purple;margin-right:6px"></span> Trajet 3 (violet)</div>
+        <div><span style="display:inline-block;width:16px;height:6px;background:orange;margin-right:6px"></span> Trajet 4 (orange)</div>
       `;
       map.controls[google.maps.ControlPosition.RIGHT_TOP].push(legend);
     }

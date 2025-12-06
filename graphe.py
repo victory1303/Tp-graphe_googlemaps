@@ -1,144 +1,247 @@
-# graphe.py (version : on garde seulement bleu + jaune, on supprime la ligne rouge)
+# app.py
 import os
-import googlemaps
 import json
-import webbrowser
-from datetime import datetime
+import googlemaps
+import streamlit as st
+import streamlit.components.v1 as components
+from itertools import islice
 
-# --------- CONFIG ----------
-API_KEY = os.getenv("GOOGLE_MAPS_API_KEY", "AIzaSyAwd1S8sAWIMsxdSvHrkk55v62gf6MlDH8")
+st.set_page_config(page_title="Trajets Victoire → Gare Centrale (Option A)", layout="wide")
+
+API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
+if not API_KEY:
+    st.error("ERREUR: définissez la variable d'environnement GOOGLE_MAPS_API_KEY avant de lancer l'app.")
+    st.stop()
+
 gmaps = googlemaps.Client(key=API_KEY)
 
-# Définir les arrêts/candidats
-stops = [
-    "Rond-point Victoire, Kinshasa, DRC",          # START
+st.title("Trajets — Rond-point Victoire → Gare Centrale (Option A)")
+st.markdown(
+    """
+    Cette app construit **tous les chemins simples** (sans répétition d'arrêt) entre Victoire et Gare Centrale
+    à partir d'un graphe d'adjacence défini. Chaque chemin est transformé en requête Google Directions (waypoints = noeuds intermédiaires).
+    Cliquez sur une route sur la carte pour voir distance / durée.
+    """
+)
+
+# -------------------------
+# 1) Définition des arrêts
+# -------------------------
+# Liste principale d'arrêts (nœuds) 
+STOPS = [
+    "Rond-point Victoire, Kinshasa, DRC",                     # START
     "Marché Central, Kinshasa, DRC",
     "Avenue du 30 Juin & Boulevard du 30 Juin, Kinshasa",
     "Hôpital Général, Kinshasa, DRC",
-    "Gare Centrale, Kinshasa, DRC"                 # END
+    "Gare Centrale, Kinshasa, DRC"                            # END
 ]
-START = stops[0]
-END = stops[-1]
 
-# Trois variantes de routes
-route_waypoints = [
-    [],  # route A
-    ["Marché Central, Kinshasa, DRC"],  # route B
-    [
+START = STOPS[0]
+END = STOPS[-1]
+
+
+# 2) Graphe d'adjacence (orienté non-orienté logique)
+#    — définit quels arrêts sont "connectés" directement.
+#    IMPORTANT : ce graphe contrôle les chemins possibles.
+
+ADJ = {
+    "Rond-point Victoire, Kinshasa, DRC": [
+        "Marché Central, Kinshasa, DRC",
+        "Avenue du 30 Juin & Boulevard du 30 Juin, Kinshasa"
+    ],
+    "Marché Central, Kinshasa, DRC": [
         "Avenue du 30 Juin & Boulevard du 30 Juin, Kinshasa",
-        "Hôpital Général, Kinshasa, DRC"
-    ]  # route C
-]
+        "Hôpital Général, Kinshasa, DRC",
+        "Gare Centrale, Kinshasa, DRC"
+    ],
+    "Avenue du 30 Juin & Boulevard du 30 Juin, Kinshasa": [
+        "Hôpital Général, Kinshasa, DRC",
+        "Gare Centrale, Kinshasa, DRC"
+    ],
+    "Hôpital Général, Kinshasa, DRC": [
+        "Gare Centrale, Kinshasa, DRC"
+    ],
+    "Gare Centrale, Kinshasa, DRC": []
+}
 
-# ----------- GÉOCODAGE ----------
-def geocode(address):
-    res = gmaps.geocode(address)
-    if not res:
-        raise RuntimeError("Geocode failed for " + address)
-    loc = res[0]["geometry"]["location"]
-    return {"lat": loc["lat"], "lng": loc["lng"]}
+# -------------------------
+# 3) Énumération des chemins simples (DFS)
 
-coords = {}
-for s in stops:
-    try:
-        coords[s] = geocode(s)
-    except Exception as e:
-        print("Geocode error:", s, e)
-        coords[s] = None
+def simple_paths(start, end, adj, max_paths=50):
+    """Génère tous les chemins simples de start à end sans répétition.
+       Limite pratique `max_paths` pour éviter des appels API massifs."""
+    stack = [(start, [start])]
+    paths = []
+    while stack:
+        (node, path) = stack.pop()
+        if node == end:
+            paths.append(list(path))
+            if len(paths) >= max_paths:
+                break
+            continue
+        for nbr in adj.get(node, []):
+            if nbr not in path:
+                stack.append((nbr, path + [nbr]))
+    return paths
 
-print("Coords obtenues pour les arrêts.")
+# on limite par défaut pour la sécurité ; mais avec notre graphe on aura peu de chemins
+MAX_ROUTES = 12
+paths = simple_paths(START, END, ADJ, max_paths=MAX_ROUTES)
 
-# ----------- RÉCUPÉRATION DES ROUTES ----------
-routes = []
-for wp_list in route_waypoints:
-    print("Requesting directions with waypoints:", wp_list)
-    try:
-        directions = gmaps.directions(
-            origin=START,
-            destination=END,
-            mode="driving",
-            waypoints=wp_list if wp_list else None,
-            departure_time="now",
-            alternatives=False
-        )
-    except Exception as e:
-        print("Directions API error:", e)
-        directions = None
+if not paths:
+    st.warning("Aucun chemin trouvé entre START et END avec la topologie actuelle.")
+    st.stop()
 
-    if not directions:
-        raise RuntimeError("Aucune direction retournée pour waypoints=" + str(wp_list))
+# Afficher les chemins trouvés
+st.sidebar.header("Paramètres")
+st.sidebar.write(f"{len(paths)} chemin(s) simple(s) trouvé(s). (limite {MAX_ROUTES})")
+# Multiselect pour choisir quelles routes afficher
+default_selected = list(range(len(paths)))  # par défaut montrer tous
+route_options = {i: "  →  ".join([p.split(",")[0] for p in path]) for i, path in enumerate(paths)}
+selected = st.sidebar.multiselect(
+    "Sélectionner les trajets à afficher (par index)",
+    options=list(route_options.keys()),
+    format_func=lambda i: f"#{i+1} : {route_options[i]}",
+    default=default_selected
+)
 
-    overview_poly = directions[0].get("overview_polyline", {}).get("points")
-    stops_count = len(wp_list)
+# Option pour limiter l'usage API / forcer refresh
+use_cache = st.sidebar.checkbox("Utiliser le cache (recommandé)", value=True)
+if not use_cache:
+    # on peut forcer la suppression du cache en redémarrant l'app manuellement
+    st.sidebar.info("Désactiver le cache peut augmenter les appels API et ralentir l'app.")
 
-    distance = 0
-    duration = 0
-    for leg in directions[0].get("legs", []):
-        if "distance" in leg:
-            distance += leg["distance"].get("value", 0)
-        if "duration" in leg:
-            duration += leg["duration"].get("value", 0)
+# -------------------------
+# 4) Géocodage des arrêts (cache léger)
+# -------------------------
+@st.cache_data(show_spinner=False)
+def geocode_addresses(addresses):
+    coords = {}
+    for a in addresses:
+        try:
+            res = gmaps.geocode(a)
+            if res:
+                loc = res[0]["geometry"]["location"]
+                coords[a] = {"lat": loc["lat"], "lng": loc["lng"]}
+            else:
+                coords[a] = None
+        except Exception as e:
+            coords[a] = None
+    return coords
 
-    routes.append({
-        "waypoints": wp_list,
-        "stops_count": stops_count,
-        "poly": overview_poly,
-        "distance_m": distance,
-        "duration_s": duration
-    })
+coords = geocode_addresses(STOPS)
 
-# ----------- COULEURS DES ROUTES (keep only two: blue + yellow) ----------
-# We sort by stops_count and assign blue to best, yellow to second, the rest -> None (skipped)
-order = sorted(range(len(routes)), key=lambda i: routes[i]["stops_count"])
-colors_per_index = [None] * len(routes)
-palette = ["blue", "yellow"]  # only two colors
+# -------------------------
+# 5) Obtenir Directions pour chaque chemin (waypoints = internes)
+# -------------------------
+@st.cache_data(show_spinner=False)
+def get_routes_for_paths(paths_list):
+    routes = []
+    for path in paths_list:
+        # waypoints = nodes between start and end (excluded)
+        waypoints = [node for node in path[1:-1]]
+        try:
+            directions = gmaps.directions(
+                origin=path[0],
+                destination=path[-1],
+                mode="driving",
+                waypoints=waypoints if waypoints else None,
+                departure_time="now",
+                alternatives=False
+            )
+        except Exception as e:
+            directions = None
+
+        if not directions:
+            # on met une entrée vide mais continue : l'app ne casse pas
+            routes.append({
+                "path": path,
+                "waypoints": waypoints,
+                "poly": None,
+                "distance_m": None,
+                "duration_s": None,
+                "error": True
+            })
+            continue
+
+        overview_poly = directions[0].get("overview_polyline", {}).get("points")
+        distance = sum(leg.get("distance", {}).get("value", 0) for leg in directions[0].get("legs", []))
+        duration = sum(leg.get("duration", {}).get("value", 0) for leg in directions[0].get("legs", []))
+
+        routes.append({
+            "path": path,
+            "waypoints": waypoints,
+            "poly": overview_poly,
+            "distance_m": distance,
+            "duration_s": duration,
+            "error": False
+        })
+    return routes
+
+# Récupérer (pense à la limite d'appels API)
+routes_all = get_routes_for_paths(paths)
+
+# -------------------------
+# 6) Coloration et préparation HTML
+#    - on ordonne par nombre d'étapes pour choix de couleurs cohérent
+# -------------------------
+# palette simple
+PALETTE = ["blue", "yellow", "purple", "orange", "green", "cyan", "magenta"]
+
+# Ordre par nombre d'intermédiaires (moins d'arrêts => priorité bleu)
+order = sorted(range(len(routes_all)), key=lambda i: len(routes_all[i]["path"]))
+colors_per_index = [None] * len(routes_all)
 for rank, idx in enumerate(order):
-    if rank < len(palette):
-        colors_per_index[idx] = palette[rank]
-    else:
-        colors_per_index[idx] = None  # skip this route (no color => won't be drawn)
+    colors_per_index[idx] = PALETTE[rank % len(PALETTE)]
 
-# ----------- EXPORT JSON POUR HTML ----------
 html_routes = []
-for i, r in enumerate(routes):
+for i, r in enumerate(routes_all):
     html_routes.append({
         "poly": r["poly"],
-        "stops_count": r["stops_count"],
+        "stops_count": len(r["path"]) - 2,  # intermédiaires
         "distance_m": r["distance_m"],
         "duration_s": r["duration_s"],
         "waypoints": r["waypoints"],
-        "color": colors_per_index[i]
+        "path": r["path"],
+        "color": colors_per_index[i],
+        "error": r["error"]
     })
 
+# Markers: marquer tous les arrêts utilisés
 major_stop_icons = {}
-for r in routes:
+for r in html_routes:
     for w in r["waypoints"]:
         major_stop_icons[w] = True
 
 markers = []
-for s in stops:
+for s in STOPS:
     markers.append({
         "title": s,
-        "coord": coords[s],
+        "coord": coords.get(s),
         "is_major": bool(major_stop_icons.get(s, False)),
         "is_end": (s == END),
         "is_start": (s == START)
     })
 
-# ----------- TEMPLATE HTML (draw only routes with color != null) ----------
+# Filtrer pour afficher seulement les routes sélectionnées
+routes_to_show = [html_routes[i] for i in selected]
+
+# -------------------------
+# 7) Construire l'HTML/JS pour la map (même logique qu'avant)
+# -------------------------
 html_template = f"""
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Graphes: Victoire -> Gare Centrale (bleu + jaune)</title>
+  <title>Trajets Victoire → Gare Centrale (Option A)</title>
   <style>
     html, body, #map {{ height: 100%; margin: 0; padding: 0; }}
     #map {{ height: 100vh; width: 100%; }}
     .legend {{
       background: white;
       padding: 10px;
-      font-size: 14px;
+      font-size: 13px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
       margin: 10px;
     }}
@@ -149,12 +252,12 @@ html_template = f"""
   <div id="legend" class="legend"></div>
 
   <script>
-    const ROUTES = {json.dumps(html_routes)};
+    const ROUTES = {json.dumps(routes_to_show)};
     const MARKERS = {json.dumps(markers)};
-    const API_KEY = "{API_KEY}";
 
     function initMap() {{
-      const start = MARKERS.find(m => m.is_start).coord;
+      const startObj = MARKERS.find(m => m.is_start);
+      const start = startObj && startObj.coord ? startObj.coord : {{lat: -4.0, lng: 15.3}};
       const map = new google.maps.Map(document.getElementById('map'), {{
         zoom: 13,
         center: start,
@@ -166,23 +269,18 @@ html_template = f"""
       const destLatLng = destMarker ? new google.maps.LatLng(destMarker.coord.lat, destMarker.coord.lng) : null;
 
       ROUTES.forEach((r, idx) => {{
-        // skip routes without color (we removed red)
-        if (!r.color) return;
-
+        if (!r.poly || r.error) return; // skip erreurs
         const path = google.maps.geometry.encoding.decodePath(r.poly || "");
         const latLngs = path.map(p => new google.maps.LatLng(p.lat(), p.lng()));
 
-        // TRIM near destination to avoid tiny overshoot
+        // Trim near destination to avoid tiny overshoots
         let usedLatLngs = latLngs;
         if (destLatLng && latLngs.length > 0) {{
           let minIdx = latLngs.length - 1;
           let minDist = Infinity;
           for (let i = 0; i < latLngs.length; i++) {{
             const d = google.maps.geometry.spherical.computeDistanceBetween(latLngs[i], destLatLng);
-            if (d < minDist) {{
-              minDist = d;
-              minIdx = i;
-            }}
+            if (d < minDist) {{ minDist = d; minIdx = i; }}
           }}
           usedLatLngs = latLngs.slice(0, Math.min(minIdx + 1, latLngs.length));
           const last = usedLatLngs[usedLatLngs.length - 1];
@@ -201,7 +299,7 @@ html_template = f"""
 
         const info = new google.maps.InfoWindow();
         line.addListener('click', (ev) => {{
-          const content = `<div><b>${{idx+1}}</b><br/>Arrêts: ${{r.stops_count}}<br/>Distance: ${{Math.round(r.distance_m)}} m<br/>Durée: ${{Math.round(r.duration_s)}} s</div>`;
+          const content = `<div style="min-width:180px"><b>Trajet ${{idx+1}}</b><br/>Chemin: ${{r.path.map(p=>p.split(',')[0]).join(' → ')}}<br/>Arrêts intermédiaires: ${{r.stops_count}}<br/>Distance: ${{r.distance_m ? Math.round(r.distance_m) + ' m' : 'N/A'}}<br/>Durée: ${{r.duration_s ? Math.round(r.duration_s) + ' s' : 'N/A'}}</div>`;
           info.setContent(content);
           info.setPosition(ev.latLng);
           info.open(map);
@@ -226,10 +324,7 @@ html_template = f"""
           icon: icon
         }});
 
-        const iw = new google.maps.InfoWindow({{
-          content: `<div><b>${{m.title}}</b></div>`
-        }});
-
+        const iw = new google.maps.InfoWindow({{ content: `<div><b>${{m.title}}</b></div>` }});
         marker.addListener('click', () => iw.open(map, marker));
         bounds.extend(new google.maps.LatLng(m.coord.lat, m.coord.lng));
       }});
@@ -237,15 +332,15 @@ html_template = f"""
       map.fitBounds(bounds);
 
       const legend = document.getElementById('legend');
-      // Updated legend: only blue and yellow routes
-      legend.innerHTML = `
-        <div><b>Légende</b></div>
+      let legendHtml = `<div><b>Légende</b></div>
         <div><img src="http://maps.google.com/mapfiles/ms/icons/blue-dot.png"> Départ (Victoire)</div>
         <div><img src="http://maps.google.com/mapfiles/ms/icons/green-dot.png"> Arrivée (Gare Centrale)</div>
-        <div><img src="http://maps.google.com/mapfiles/ms/icons/black-dot.png"> Grand arrêt</div>
-        <div style="margin-top:6px"><span style="display:inline-block;width:16px;height:6px;background:blue;margin-right:6px"></span> Trajet — moins d'arrêts (bleu)</div>
-        <div><span style="display:inline-block;width:16px;height:6px;background:yellow;margin-right:6px"></span> Trajet — moyen (jaune)</div>
-      `;
+        <div><img src="http://maps.google.com/mapfiles/ms/icons/black-dot.png"> Grand arrêt (intermédiaire fréquent)</div>
+        <div style="margin-top:6px"><b>Routes affichées:</b></div>`;
+      ROUTES.forEach((r, idx) => {{
+        legendHtml += `<div style="margin-top:4px"><span style="display:inline-block;width:18px;height:8px;background:${{r.color}};margin-right:8px;border:1px solid #222"></span> Trajet ${{idx+1}} — ${{r.path.map(p=>p.split(',')[0]).join(' → ')}}</div>`;
+      }});
+      legend.innerHTML = legendHtml;
       map.controls[google.maps.ControlPosition.RIGHT_TOP].push(legend);
     }}
   </script>
@@ -255,10 +350,25 @@ html_template = f"""
 </html>
 """
 
-# ----------- SAUVEGARDE HTML -----------
-out_file = "graph_routes_victoire_gare.html"
-with open(out_file, "w", encoding="utf-8") as f:
-    f.write(html_template)
+# -------------------------
+# 8) Affichage Streamlit :
+#    - résumé latéral des routes (distance/durée)
+#    - rendu HTML
+# -------------------------
+st.header("Résumé des trajets sélectionnés")
+if not selected:
+    st.info("Sélectionnez au moins un trajet dans la barre latérale pour l'afficher.")
+else:
+    for idx in selected:
+        r = html_routes[idx]
+        st.markdown(f"**Trajet #{idx+1}** — { ' → '.join([p.split(',')[0] for p in r['path']]) }")
+        if r["error"] or (r["distance_m"] is None):
+            st.write("  - ❗ Erreur lors de la récupération du trajet (ou données indisponibles).")
+        else:
+            st.write(f"  - Arrêts intermédiaires : {r['stops_count']}")
+            st.write(f"  - Distance : {round(r['distance_m'])} m")
+            st.write(f"  - Durée : {round(r['duration_s'])} s")
+        st.write("---")
 
-print("Fichier généré :", out_file)
-webbrowser.open("file://" + os.path.abspath(out_file))
+st.markdown("**Carte (interagissez avec les trajets)**")
+components.html(html_template, height=720, scrolling=True)
